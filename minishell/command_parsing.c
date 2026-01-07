@@ -12,6 +12,36 @@
 
 #include "minishell.h"
 
+t_token *new_token(t_token_type type, char *value)
+{
+    t_token *token;
+
+    token = (t_token *)malloc(sizeof(t_token));
+    if (!token)
+        return (NULL);
+    token->type = type;
+    token->value = value;
+    token->next = NULL;
+    return (token);
+}
+
+void add_token(t_token **head, t_token *new)
+{
+    t_token *current;
+
+    if (!new)
+        return ;
+    if (!*head)
+    {
+        *head = new;
+        return ;
+    }
+    current = *head;
+    while (current->next)
+        current = current->next;
+    current->next = new;
+}
+
 char *extract_word_with_quotes(char *str, int *i)
 {
     int start;
@@ -32,14 +62,14 @@ char *extract_word_with_quotes(char *str, int *i)
         
         if (!state.in_single && !state.in_double)
         {
-            if (is_whitespace(str[*i]) || is_special_char(str[*i]))
+            if (is_space(str[*i]) || is_token_char(str[*i]))
                 break;
         }
-        
-        (i)++;
+
+        (*i)++;
     }
 
-    int len = i - start;
+    int len = *i - start;
     word = malloc(sizeof(char) * (len + 1));
     if (!word)
         return (NULL);
@@ -66,7 +96,7 @@ t_token *tokenize_with_quotes(char *input)
     
     while (input[i])
     {
-        while (is_whitespace(input[i]))
+        while (is_space(input[i]))
             i++;
         
         if (!input[i])
@@ -75,34 +105,38 @@ t_token *tokenize_with_quotes(char *input)
         if (input[i] == '|')
         {
             new = new_token(type_Pipe, NULL);
+            printf("pipe + 1\n");
             add_token(&tokens, new);
             i++;
         }
         else if (input[i] == '>' && input[i + 1] == '>')
         {
             new = new_token(type_Redir_app, NULL);
+            printf("redirection\n");
             add_token(&tokens, new);
             i += 2;
         }    
         else if (input[i] == '>')
         {
             new = new_token(type_Redir_out, NULL);
+            printf("in\n");
             add_token(&tokens, new);
             i++;
         }
         else if (input[i] == '<')
         {
             new = new_token(type_Redir_in, NULL);
+            printf("out\n");
             add_token(&tokens, new);
             i++;
         }
         else
         {
-            char *word = extract_word_with_quotes(input, i);
+            char *word = extract_word_with_quotes(input, &i);
             new = new_token(type_Word, word);
+            printf("quotes\n");
             add_token(&tokens, new);
         }
     }
-    
     return (tokens);
 }

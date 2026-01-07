@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "libft.h"
+/*#include "libft.h"*/
 
 typedef enum token_type
 {
@@ -53,8 +53,12 @@ typedef struct s_cmd
 {
     char            **argv;
     t_redir         *redirs;
-    struct s_cmd    *next
+    struct s_cmd    *next;
 }   t_cmd;
+
+t_token *tokenize_with_quotes(char *input);
+int is_token_char(char c);
+int is_space(char c);
 
 #endif
 

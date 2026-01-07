@@ -27,7 +27,7 @@
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }*/
 
-int environment_variables(char const * envp)
+/*int environment_variables(char const * envp)
 {
     char *value;
 
@@ -41,7 +41,7 @@ int environment_variables(char const * envp)
 void launch_executable(const char * path, char const ** args, char const ** envp)
 {
     execve(path, args, envp);
-}
+}*/
 void handle_sigint(int sig)
 {
     (void)sig;
@@ -67,14 +67,15 @@ int main(void)
         if(!*line_input || (strcmp(line_input , "exit") == 0))
         {
             free(line_input);
+            if (strcmp(line_input, "exit") == 0)
+                end = 1;
             continue;
         }
-        parse_input(line_input);
+        tokenize_with_quotes(line_input);
         add_history(line_input);
-        execute_command(line_input);
+        /*execute_command(line_input);*/
         free(line_input);
     }
     rl_clear_history();
-    free(line_input);
 	return (0);
 }
