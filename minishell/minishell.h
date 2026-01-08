@@ -25,7 +25,10 @@ typedef enum token_type
     type_Redir_in,     // "<"
     type_Redir_app,      // "<<"
     type_Redir_out,    // ">"
-    type_Redir_deli     // ">>"
+    type_Redir_deli,     // ">>"
+    type_Var,   // "$"
+    type_Var_exit,
+    type_Var_pid
 
 }   t_token_type;
 
@@ -33,6 +36,8 @@ typedef struct s_token
 {
     t_token_type    type;
     char            *value;
+    int             in_single_quotes;
+    int             in_double_quotes;
     struct s_token  *next;
 }   t_token;
 
@@ -59,6 +64,10 @@ typedef struct s_cmd
 t_token *tokenize_with_quotes(char *input);
 int is_token_char(char c);
 int is_space(char c);
+int is_var_char(char c);
+void print_tokens(t_token *tokens);
+void free_tokens(t_token *tokens);
+
 
 #endif
 

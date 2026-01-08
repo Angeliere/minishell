@@ -53,6 +53,7 @@ void handle_sigint(int sig)
 
 int main(void)
 {
+    t_token *tokens;
     char *line_input;
     int end = 0;
     signal(SIGINT, handle_sigint);
@@ -61,19 +62,25 @@ int main(void)
         line_input = readline("minishell> ");
         if(!line_input /*|| exit_line(line_input)*/)
         {
-            end = 1;
+            printf("exit\n");
             break;
         }
-        if(!*line_input || (strcmp(line_input , "exit") == 0))
-        {
+        if(!*line_input)
+        { 
             free(line_input);
-            if (strcmp(line_input, "exit") == 0)
-                end = 1;
             continue;
         }
-        tokenize_with_quotes(line_input);
+        if((strcmp(line_input , "exit") == 0))
+        {
+            free(line_input);
+            break;
+        }
         add_history(line_input);
+        tokens = tokenize_with_quotes(line_input);
+        print_tokens(tokens);
         /*execute_command(line_input);*/
+        print_tokens(tokens);
+        free_tokens(tokens);
         free(line_input);
     }
     rl_clear_history();
