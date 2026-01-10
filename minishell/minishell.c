@@ -56,6 +56,8 @@ int main(void)
     t_token *tokens;
     char *line_input;
     int end = 0;
+    t_cmd *cmds; 
+    
     signal(SIGINT, handle_sigint);
     while(!end)
     {
@@ -78,9 +80,12 @@ int main(void)
         add_history(line_input);
         tokens = tokenize_with_quotes(line_input);
         print_tokens(tokens);
+        cmds = parse(tokens);
+        print_commands(cmds);
         /*execute_command(line_input);*/
         print_tokens(tokens);
         free_tokens(tokens);
+        free_commands(cmds);
         free(line_input);
     }
     rl_clear_history();

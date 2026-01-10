@@ -118,7 +118,7 @@ char *extract_var_name(char *str, int *i)
     while (str[*i] && is_var_char(str[*i]))
         (*i)++;
     len = *i - start;
-    if(len = 0)
+    if(len == 0)
         return(NULL);
     var_name = malloc(sizeof(char) * (len + 1));
     if(!var_name)
@@ -165,7 +165,8 @@ t_token *extract_word_with_quotes(char *str, int *i)
                 return(NULL);
             word[0] = '?';
             word[1] = '\0';
-            return (word);
+            token->value = word;
+            return (token);
         }
         if(str[*i] == '$')
         {
@@ -176,7 +177,8 @@ t_token *extract_word_with_quotes(char *str, int *i)
                 return(NULL);
             word[0] = '$';
             word[1] = '\0';
-            return (word);
+            token->value = word;
+            return (token);
         }
         token->type = type_Var;
         token->value = extract_var_name(str, i);
@@ -198,7 +200,7 @@ t_token *extract_word_with_quotes(char *str, int *i)
         else if (str[*i] == '"' && !state.in_single)
         {
             state.in_double = !state.in_double;
-            token->in_single_quotes = 1;
+            token->in_double_quotes = 1;
         }
         
         if (!state.in_single && !state.in_double)
@@ -231,7 +233,6 @@ t_token *tokenize_with_quotes(char *input)
     t_token *tokens;
     t_token *new;
     int i;
-    t_token_type type;
 
     tokens = NULL;
     i = 0;

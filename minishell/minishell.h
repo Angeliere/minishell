@@ -62,11 +62,20 @@ typedef struct s_cmd
 }   t_cmd;
 
 t_token *tokenize_with_quotes(char *input);
+t_token *extract_word_with_quotes(char *str, int *i);
+t_token *new_token(t_token_type type, char *value);
+char    *extract_var_name(char *str, int *i);
 int is_token_char(char c);
 int is_space(char c);
 int is_var_char(char c);
+void    add_token(t_token **head, t_token *new);
 void print_tokens(t_token *tokens);
 void free_tokens(t_token *tokens);
+void free_commands(t_cmd *cmds);
+t_cmd *parse(t_token *tokens);
+char **build_argv(t_token **tokens);
+t_cmd *new_cmd(void);
+void print_commands(t_cmd *cmds);
 
 
 #endif

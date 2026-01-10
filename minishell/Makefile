@@ -14,6 +14,7 @@ INCLUDES = -I. -I/usr/include $(LIBFT_INC)
 SRCS =	minishell.c \
 		command_lexer.c \
 		lexer_utility.c \
+		parser.c \
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(SRCS)) 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
