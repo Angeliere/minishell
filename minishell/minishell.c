@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   minishell.c                                     :+:      :+:    :+:      */
+/*   minishell.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 12:31:13 by aschweit       #+#    #+#                */
-/*   Updated: 2025/10/08 12:32:07 by aschweit         ###   ########.fr       */
+/*   Updated: 2026/01/12 18:01:03 by aschweit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,21 @@
 #include <readline/history.h>
 #include <signal.h>
 
-/*void setup_terminal(void)
+struct termios g_original_term;
+
+void setup_terminal(void)
 {
     struct termios term;
-    
-    tcgetattr(STDIN_FILENO, &term);
+    tcgetattr(STDIN_FILENO, &g_original_term);
+	term = g_original_term;
     term.c_lflag &= ~ECHOCTL;  
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
-}*/
+}
+
+void restore_terminal(void)
+{
+    tcsetattr(STDIN_FILENO, TCSANOW, &g_original_term);
+}
 
 /*int environment_variables(char const * envp)
 {
@@ -57,8 +64,10 @@ int main(void)
     char *line_input;
     int end = 0;
     t_cmd *cmds; 
-    
+   
+	setup_terminal(); 
     signal(SIGINT, handle_sigint);
+	signal(SIGQUIT, SIG_IGN); 
     while(!end)
     {
         line_input = readline("minishell> ");
@@ -88,6 +97,7 @@ int main(void)
         free_commands(cmds);
         free(line_input);
     }
+	restore_terminal();
     rl_clear_history();
 	return (0);
 }

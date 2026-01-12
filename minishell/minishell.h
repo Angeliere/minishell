@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <termios.h>
 /*#include "libft.h"*/
 
 typedef enum token_type
@@ -60,6 +61,8 @@ typedef struct s_cmd
     t_redir         *redirs;
     struct s_cmd    *next;
 }   t_cmd;
+
+extern struct termios g_original_term;
 
 t_token *tokenize_with_quotes(char *input);
 t_token *extract_word_with_quotes(char *str, int *i);
