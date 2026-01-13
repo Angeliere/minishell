@@ -65,6 +65,8 @@ int main(int argc, char **argv, char **envp) // added argument instead of void.
     int end = 0;
     t_cmd *cmds; 
    
+    (void)argc;
+    (void)argv;
 	setup_terminal(); 
     signal(SIGINT, handle_sigint);
 	signal(SIGQUIT, SIG_IGN); 
@@ -92,6 +94,7 @@ int main(int argc, char **argv, char **envp) // added argument instead of void.
         cmds = parse(tokens);
         execute_cmds(cmds, envp); // atbicer
         // print_commands(cmds);
+        /*execute_command(line_input);*/
         // print_tokens(tokens);
         free_tokens(tokens);
         free_commands(cmds);

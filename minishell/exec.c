@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exec.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: atbicer <atbicer@student.42belgium.be>     +#+  +:+       +#+        */
+/*   By: atbicer <atbicer@student.s19.be>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/12 23:02:40 by atbicer           #+#    #+#             */
-/*   Updated: 2026/01/13 02:15:19 by atbicer          ###   ########.fr       */
+/*   Updated: 2026/01/13 06:47:40 by atbicer          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 
 /* ---------- small utils ---------- */
 
+
 static int	ft_strcmp(const char *a, const char *b)
 {
 	size_t i = 0;
@@ -24,20 +25,6 @@ static int	ft_strcmp(const char *a, const char *b)
 	while (a[i] && b[i] && a[i] == b[i])
 		i++;
 	return ((unsigned char)a[i] - (unsigned char)b[i]);
-}
-
-static int	ft_starts_with(const char *s, const char *prefix)
-{
-	size_t i = 0;
-	if (!s || !prefix)
-		return (0);
-	while (prefix[i])
-	{
-		if (s[i] != prefix[i])
-			return (0);
-		i++;
-	}
-	return (1);
 }
 
 static char	*ft_strjoin3(const char *a, const char *b, const char *c)
@@ -165,9 +152,43 @@ static int	builtin_echo(char **argv)
 	return (0);
 }
 
+static int builtin_pwd(void)
+{
+    char *cwd = getcwd(NULL, 0);
+    if (!cwd)
+        return (perror("pwd"), 1);
+    write(1, cwd, ft_strlen(cwd));
+    write(1, "\n", 1);
+    free(cwd);
+    return (0);
+}
+
 static int	is_builtin(char *cmd)
 {
-	return (cmd && ft_strcmp(cmd, "echo") == 0);
+	if (!ft_strcmp("echo", cmd))
+		return (1);
+	if (!ft_strcmp("pwd", cmd))
+		return (1);
+	if (!ft_strcmp("cd", cmd))
+		return (1);
+	if (!ft_strcmp("env", cmd))
+		return (1);
+	if (!ft_strcmp("export", cmd))
+		return (1);
+	if (!ft_strcmp("unset", cmd))
+		return (1);
+	if (!ft_strcmp("exit", cmd))
+		return (1);
+	return (0);
+}
+
+static int	run_builtin(char **argv)
+{
+	if (!ft_strcmp("echo", argv[0]))
+		return (builtin_echo(argv));
+	if (!ft_strcmp("pwd", argv[0]))
+		return (builtin_pwd());
+	return (0);
 }
 
 /* ---------- public entry ---------- */
@@ -190,7 +211,7 @@ int	execute_cmds(t_cmd *cmds, char **envp)
 
 	/* builtin in parent (good enough for echo test) */
 	if (is_builtin(cmds->argv[0]))
-		return (builtin_echo(cmds->argv));
+		return (run_builtin(cmds->argv));
 
 	pid = fork();
 	if (pid < 0)
