@@ -1,70 +1,92 @@
-# 1. Variables
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: atbicer <atbicer@student.42belgium.be>     +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2023/08/29 04:40:04 by atbicer           #+#    #+#              #
+#    Updated: 2026/01/13 01:59:56 by atbicer          ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+# Variables
 NAME = libft.a
-LIBFT = libft.a
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror 
-RM = rm -f
+CFLAGS = -Wall -Wextra -Werror
+INCLUDE = -Iinclude
+RM = rm -rf
 
-# 2. Source and Object Files
-SRCS =ft_atoi.c \
-      ft_bzero.c \
-      ft_memset.c \
-      ft_isalnum.c \
-      ft_isalpha.c \
-      ft_isascii.c \
-      ft_isdigit.c \
-      ft_isprint.c \
-      ft_itoa.c \
-      ft_memchr.c \
-      ft_memcmp.c \
-      ft_memcpy.c \
-      ft_memmove.c \
-      ft_putchar_fd.c \
-      ft_putendl_fd.c \
-      ft_putnbr_fd.c \
-      ft_putstr_fd.c \
-      ft_split.c \
-      ft_strchr.c \
-      ft_strdup.c \
-      ft_striteri.c \
-      ft_strjoin.c \
-      ft_strlcat.c \
-      ft_strlcpy.c \
-      ft_strlen.c \
-      ft_strmapi.c \
-      ft_strncmp.c \
-      ft_strnstr.c \
-      ft_strrchr.c \
-      ft_strtrim.c \
-      ft_substr.c \
-      ft_tolower.c \
-      ft_toupper.c \
-      ft_calloc.c \
-      ft_putnbr_hex_ptr.c \
-      ft_putnbr_hex.c \
-      ft_putnbr_hex_caps.c \
-      ft_putnbr_unsigned.c \
-      ft_printf.c \
-      get_next_line_modified.c
-      
-OBJS = $(SRCS:.c=.o)
+# Colors
+GREEN = \033[0;32m
+RED = \033[0;31m
+RESET = \033[0m
 
-# 3. Default Target
+# Directories
+SRC_DIR = src
+OBJ_DIR = obj
+
+# Source files
+SRC_CHAR = ft_isdigit.c ft_isascii.c ft_isprint.c ft_isalpha.c ft_isalnum.c ft_toupper.c ft_tolower.c ft_isspace.c
+SRC_STRING = ft_strlen.c ft_strlcpy.c ft_strlcat.c ft_strchr.c ft_strrchr.c ft_strncmp.c ft_strnstr.c \
+             ft_strdup.c ft_substr.c ft_strjoin.c ft_strtrim.c ft_split.c ft_strmapi.c ft_striteri.c
+SRC_MEMORY = ft_bzero.c ft_memcpy.c ft_memset.c ft_memmove.c ft_memchr.c ft_memcmp.c ft_calloc.c
+SRC_CONVERSION = ft_atoi.c ft_atol.c ft_itoa.c
+SRC_OUTPUT = ft_putchar_fd.c ft_putstr_fd.c ft_putendl_fd.c ft_putnbr_fd.c
+SRC_LIST = ft_lstnew.c ft_lstadd_front.c ft_lstsize.c ft_lstlast.c \
+           ft_lstadd_back.c ft_lstdelone.c ft_lstclear.c ft_lstiter.c ft_lstmap.c
+SRC_PRINTF = ft_printf.c ft_print_digit.c ft_print_ptr.c ft_print_str.c
+SRC_GNL = get_next_line.c
+
+# Combine all source files
+SRCS = $(addprefix $(SRC_DIR)/char/, $(SRC_CHAR)) \
+       $(addprefix $(SRC_DIR)/string/, $(SRC_STRING)) \
+       $(addprefix $(SRC_DIR)/memory/, $(SRC_MEMORY)) \
+       $(addprefix $(SRC_DIR)/conversion/, $(SRC_CONVERSION)) \
+       $(addprefix $(SRC_DIR)/output/, $(SRC_OUTPUT)) \
+       $(addprefix $(SRC_DIR)/list/, $(SRC_LIST)) \
+       $(addprefix $(SRC_DIR)/printf/, $(SRC_PRINTF)) \
+	   $(addprefix $(SRC_DIR)/gnl/, $(SRC_GNL))
+
+# Object files
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+
+# Progress bar variables
+TOTAL_FILES := $(words $(SRCS))
+CURRENT_FILE := 0
+BAR_LENGTH := 30
+
+# Progress bar function - use with $(call progress_bar,filename)
+define progress_bar
+    $(eval CURRENT_FILE=$(shell echo $$(($(CURRENT_FILE) + 1))))
+    $(eval PERCENTAGE=$(shell echo $$(($(CURRENT_FILE) * 100 / $(TOTAL_FILES)))))
+    $(eval IS_LAST=$(shell if [ $(CURRENT_FILE) -eq $(TOTAL_FILES) ]; then echo 1; else echo 0; fi))
+    $(eval HASH_COUNT=$(shell if [ $(IS_LAST) -eq 1 ]; then echo $(BAR_LENGTH); else echo $$(($(CURRENT_FILE) * $(BAR_LENGTH) / $(TOTAL_FILES))); fi))
+    $(eval SPACE_COUNT=$(shell echo $$(($(BAR_LENGTH) - $(HASH_COUNT)))))
+    @printf "\r[%-$(BAR_LENGTH)s] %3d%% (%d/%d) %-20s" "$$(printf '%0.s#' $$(seq 1 $(HASH_COUNT)))" $(PERCENTAGE) $(CURRENT_FILE) $(TOTAL_FILES) "$(1)"
+endef
+
+# Rules
 all: $(NAME)
 
-# 4. Build Rules
 $(NAME): $(OBJS)
-	ar rcs $(NAME) $(OBJS)
-  
+	@printf "\n$(GREEN)Building libft...$(RESET)\n"
+	@ar rcs $(NAME) $(OBJS)
+	@printf "$(GREEN)libft compiled$(RESET)\n"
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(@D)
+	@$(call progress_bar,$(notdir $<))
+	@$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
-# 5. Utility Targets
 clean:
-	$(RM) $(OBJS)
+	@printf "$(RED)[LIBFT] Cleaning object files...$(RESET)\n"
+	@$(RM) $(OBJ_DIR)
 
 fclean: clean
-	$(RM) $(NAME) 
+	@printf "$(RED)[LIBFT] Cleaning everything...$(RESET)\n"
+	@$(RM) $(NAME)
 
 re: fclean all
+
+.PHONY: all clean fclean re

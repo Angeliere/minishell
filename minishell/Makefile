@@ -1,46 +1,68 @@
+# **************************************************************************** #
+#                                    NAME                                      #
+# **************************************************************************** #
 
-NAME = minishell
-CC = cc
-CFLAGS = -Wall -Wextra -Werror
-RM = rm -f
-SRC_DIR = src
-OBJ_DIR = obj
-LIBFT_DIR = libft
+NAME		= minishell
 
-LIBFT = $(LIBFT_DIR)/libft.a
-LIBFT_INC = -I$(LIBFT_DIR)
-INCLUDES = -I. -I/usr/include $(LIBFT_INC)
+# **************************************************************************** #
+#                                   COMPILER                                   #
+# **************************************************************************** #
 
-SRCS =	minishell.c \
-		command_lexer.c \
-		lexer_utility.c \
-		parser.c \
+CC			= cc
+# CFLAGS		= -Wall -Wextra -Werror
 
-SRC_FILES = $(addprefix $(SRC_DIR)/, $(SRCS)) 
-OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
+# **************************************************************************** #
+#                                    FILES                                     #
+# **************************************************************************** #
 
-HEADERS = minishell.h
+SRCS		= minishell.c \
+			  command_lexer.c \
+			  lexer_utility.c \
+			  parser.c \
+			  exec.c \
+			  builtins_dispatcher.c \
+			  builtins_cd.c \
+			  builtins_pwd.c \
+			  builtins_export.c \
+			  builtins_unset.c \
+			  builtins_env.c \
+			  builtins_exit.c
+OBJS		= $(SRCS:.c=.o)
 
-all:$(NAME)
+# **************************************************************************** #
+#                                    LIBFT                                     #
+# **************************************************************************** #
 
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -lreadline -o $(NAME)
+LIBFT_DIR	= libft
+LIBFT		= $(LIBFT_DIR)/libft.a
+INCLUDES	= -I. -I$(LIBFT_DIR)/include
 
+# readline (adjust if needed for your OS/env)
+READLINE	= -lreadline -lhistory -lncurses
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
-	@mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+# **************************************************************************** #
+#                                     RULES                                    #
+# **************************************************************************** #
+
+all: $(NAME)
+
+$(NAME): $(LIBFT) $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(LIBFT) $(READLINE) -o $(NAME)
 
 $(LIBFT):
-	@make -C $(LIBFT_DIR)
+	$(MAKE) -C $(LIBFT_DIR)
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	$(RM) $(OBJS)
-	@make -C $(LIBFT_DIR) clean
+	rm -f $(OBJS)
+	$(MAKE) -C $(LIBFT_DIR) clean
+
 fclean: clean
-	$(RM) $(NAME) 
-	@make -C $(LIBFT_DIR) fclean
-	
+	rm -f $(NAME)
+	$(MAKE) -C $(LIBFT_DIR) fclean
+
 re: fclean all
 
 .PHONY: all clean fclean re

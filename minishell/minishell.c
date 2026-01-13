@@ -58,7 +58,7 @@ void handle_sigint(int sig)
     rl_redisplay();
 }
 
-int main(void)
+int main(int argc, char **argv, char **envp) // added argument instead of void.
 {
     t_token *tokens;
     char *line_input;
@@ -88,11 +88,11 @@ int main(void)
         }
         add_history(line_input);
         tokens = tokenize_with_quotes(line_input);
-        print_tokens(tokens);
+        // print_tokens(tokens);
         cmds = parse(tokens);
-        print_commands(cmds);
-        /*execute_command(line_input);*/
-        print_tokens(tokens);
+        execute_cmds(cmds, envp); // atbicer
+        // print_commands(cmds);
+        // print_tokens(tokens);
         free_tokens(tokens);
         free_commands(cmds);
         free(line_input);
