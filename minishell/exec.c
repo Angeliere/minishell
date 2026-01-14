@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exec.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: atbicer <atbicer@student.s19.be>           +#+  +:+       +#+        */
+/*   By: atbicer <atbicer@student.42belgium.be>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/12 23:02:40 by atbicer           #+#    #+#             */
-/*   Updated: 2026/01/13 06:47:40 by atbicer          ###   ########.fr       */
+/*   Updated: 2026/01/13 22:50:36 by atbicer          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,37 +14,28 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-/* ---------- small utils ---------- */
-
-
-static int	ft_strcmp(const char *a, const char *b)
-{
-	size_t i = 0;
-	if (!a || !b)
-		return (a != b);
-	while (a[i] && b[i] && a[i] == b[i])
-		i++;
-	return ((unsigned char)a[i] - (unsigned char)b[i]);
-}
-
 static char	*ft_strjoin3(const char *a, const char *b, const char *c)
 {
-	size_t la = ft_strlen(a);
-	size_t lb = ft_strlen(b);
-	size_t lc = ft_strlen(c);
-	char *out = malloc(la + lb + lc + 1);
-	size_t i = 0;
+	char	*s1;
+	char	*s2;
 
-	if (!out)
+	s1 = ft_strjoin(a, b);
+	if (!s1)
 		return (NULL);
-	while (a && *a) out[i++] = *a++;
-	while (b && *b) out[i++] = *b++;
-	while (c && *c) out[i++] = *c++;
-	out[i] = '\0';
-	return (out);
+	s2 = ft_strjoin(s1, c);
+	free(s1);
+	return (s2);
 }
 
-/* split PATH by ':' */
+static void	free_split(char **arr)
+{
+	int i = 0;
+	if (!arr) return;
+	while (arr[i])
+		free(arr[i++]);
+	free(arr);
+}
+
 static char	**split_colon(const char *s)
 {
 	int count = 1;
@@ -82,16 +73,50 @@ static char	**split_colon(const char *s)
 	return (arr);
 }
 
-static void	free_split(char **arr)
+static int	is_builtin(char *cmd)
 {
-	int i = 0;
-	if (!arr) return;
-	while (arr[i])
-		free(arr[i++]);
-	free(arr);
+	if (!ft_strcmp(cmd, "echo") || !ft_strcmp(cmd, "cd")
+		|| !ft_strcmp(cmd, "pwd") || !ft_strcmp(cmd, "export")
+		|| !ft_strcmp(cmd, "unset") || !ft_strcmp(cmd, "env")
+		|| !ft_strcmp(cmd, "exit"))
+		return (1);
+	return (0);
 }
 
-/* find executable path using PATH */
+static int	exec_builtin(char **argv, t_shell *shell)
+{
+	if (!ft_strcmp(argv[0], "echo"))
+		return (builtin_echo(argv));
+	if (!ft_strcmp(argv[0], "cd"))
+		return (builtin_cd(argv));
+	if (!ft_strcmp(argv[0], "pwd"))
+		return (builtin_pwd(argv));
+	if (!ft_strcmp(argv[0], "export"))
+		return (builtin_export(argv, shell));
+	if (!ft_strcmp(argv[0], "unset"))
+		return (builtin_unset(argv, shell));
+	if (!ft_strcmp(argv[0], "env"))
+		return (builtin_env(argv, shell->my_envp));
+	if (!ft_strcmp(argv[0], "exit"))
+		return (builtin_exit(argv));
+	return (1);
+}
+
+static void	setup_pipe(int prev_fd, int pipefd[2], int has_next)
+{
+	if (prev_fd != -1)
+	{
+		dup2(prev_fd, STDIN_FILENO);
+		close(prev_fd);
+	}
+	if (has_next)
+	{
+		close(pipefd[0]);
+		dup2(pipefd[1], STDOUT_FILENO);
+		close(pipefd[1]);
+	}
+}
+
 static char	*resolve_path(char *cmd, char **envp)
 {
 	char *path_env;
@@ -128,109 +153,64 @@ static char	*resolve_path(char *cmd, char **envp)
 	return (NULL);
 }
 
-/* ---------- builtin: echo ---------- */
-
-static int	builtin_echo(char **argv)
+static void	exec_child(t_cmd *cmd, t_shell *sh)
 {
-	int i = 1;
-	int newline = 1;
+	char	*path;
 
-	if (argv[1] && ft_strcmp(argv[1], "-n") == 0)
+	if (is_builtin(cmd->argv[0]))
+		exit(exec_builtin(cmd->argv, sh));
+	path = resolve_path(cmd->argv[0], sh->envp);
+	if (!path)
 	{
-		newline = 0;
-		i = 2;
+		write(2, "minishell: command not found: ", 30);
+		write(2, cmd->argv[0], ft_strlen(cmd->argv[0]));
+		write(2, "\n", 1);
+		exit(127);
 	}
-	while (argv[i])
+	execve(path, cmd->argv, sh->envp);
+	perror("execve");
+	exit(126);
+}
+
+static int	update_prev_fd(int prev_fd, int pipefd[2], int has_next)
+{
+	if (prev_fd != -1)
+		close(prev_fd);
+	if (has_next)
 	{
-		write(1, argv[i], ft_strlen(argv[i]));
-		if (argv[i + 1])
-			write(1, " ", 1);
-		i++;
+		close(pipefd[1]);
+		return (pipefd[0]);
 	}
-	if (newline)
-		write(1, "\n", 1);
-	return (0);
+	return (-1);
 }
 
-static int builtin_pwd(void)
+int	execute_cmds(t_cmd *cmds, t_shell *sh)
 {
-    char *cwd = getcwd(NULL, 0);
-    if (!cwd)
-        return (perror("pwd"), 1);
-    write(1, cwd, ft_strlen(cwd));
-    write(1, "\n", 1);
-    free(cwd);
-    return (0);
-}
+	int		prev_fd;
+	int		pipefd[2];
+	pid_t	pid;
+	int		status;
 
-static int	is_builtin(char *cmd)
-{
-	if (!ft_strcmp("echo", cmd))
-		return (1);
-	if (!ft_strcmp("pwd", cmd))
-		return (1);
-	if (!ft_strcmp("cd", cmd))
-		return (1);
-	if (!ft_strcmp("env", cmd))
-		return (1);
-	if (!ft_strcmp("export", cmd))
-		return (1);
-	if (!ft_strcmp("unset", cmd))
-		return (1);
-	if (!ft_strcmp("exit", cmd))
-		return (1);
-	return (0);
-}
-
-static int	run_builtin(char **argv)
-{
-	if (!ft_strcmp("echo", argv[0]))
-		return (builtin_echo(argv));
-	if (!ft_strcmp("pwd", argv[0]))
-		return (builtin_pwd());
-	return (0);
-}
-
-/* ---------- public entry ---------- */
-
-int	execute_cmds(t_cmd *cmds, char **envp)
-{
-	pid_t pid;
-	int status;
-	char *path;
-
-	if (!cmds || !cmds->argv || !cmds->argv[0])
+	if (!cmds || !cmds->argv)
 		return (0);
-
-	/* v0: ignore pipes and redirs */
-	if (cmds->next || cmds->redirs)
+	if (!cmds->next && is_builtin(cmds->argv[0]))
+		return (exec_builtin(cmds->argv, sh));
+	prev_fd = -1;
+	while (cmds)
 	{
-		write(2, "v0: pipes/redirs not implemented yet\n", 38);
-		return (1);
-	}
-
-	/* builtin in parent (good enough for echo test) */
-	if (is_builtin(cmds->argv[0]))
-		return (run_builtin(cmds->argv));
-
-	pid = fork();
-	if (pid < 0)
-		return (perror("fork"), 1);
-	if (pid == 0)
-	{
-		path = resolve_path(cmds->argv[0], envp);
-		if (!path)
+		if (cmds->next && pipe(pipefd) == -1)
+			return (perror("pipe"), 1);
+		pid = fork();
+		if (pid == 0)
 		{
-			write(2, "minishell: command not found: ", 30);
-			write(2, cmds->argv[0], ft_strlen(cmds->argv[0]));
-			write(2, "\n", 1);
-			exit(127);
+			setup_pipe(prev_fd, pipefd, cmds->next != NULL);
+			exec_child(cmds, sh);
 		}
-		execve(path, cmds->argv, envp);
-		perror("execve");
-		exit(126);
+		prev_fd = update_prev_fd(prev_fd, pipefd, cmds->next != NULL);
+		cmds = cmds->next;
 	}
-	waitpid(pid, &status, 0);
+	while (wait(&status) > 0)
+		;
 	if (WIFEXITED(status))
 		return (WEXITSTATUS(status));
 	return (1);

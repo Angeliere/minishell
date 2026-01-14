@@ -1,117 +1,46 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   builtins_export.c                                  :+:      :+:    :+:   */
+/*   builtin_export.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
+/*   By: atbicer <atbicer@student.s19.be>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/13 by aschweit              #+#    #+#                */
-/*   Updated: 2026/01/13 by aschweit                 ###   ########.fr       */
+/*   Created: 2026/01/14 20:00:00 by atbicer           #+#    #+#             */
+/*   Updated: 2026/01/14 20:00:00 by atbicer          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static void	print_export_env(char **envp)
+static void	print_export(char **envp)
 {
 	int	i;
 
 	i = 0;
-	while (envp && envp[i])
+	while (envp[i])
 	{
 		ft_putstr_fd("declare -x ", 1);
 		ft_putstr_fd(envp[i], 1);
-		write(1, "\n", 1);
+		ft_putchar_fd('\n', 1);
 		i++;
 	}
 }
 
-static int	is_valid_var_name(char *str)
+int	builtin_export(char **argv, t_shell *shell)
 {
 	int	i;
-
-	if (!str || !str[0])
-		return (0);
-	if (!(str[0] == '_' || ft_isalpha(str[0])))
-		return (0);
-	i = 1;
-	while (str[i] && str[i] != '=')
-	{
-		if (!(str[i] == '_' || ft_isalnum(str[i])))
-			return (0);
-		i++;
-	}
-	return (1);
-}
-
-static char	*get_var_name(char *str)
-{
-	int		i;
-	char	*name;
-
-	i = 0;
-	while (str[i] && str[i] != '=')
-		i++;
-	name = malloc(i + 1);
-	if (!name)
-		return (NULL);
-	i = 0;
-	while (str[i] && str[i] != '=')
-	{
-		name[i] = str[i];
-		i++;
-	}
-	name[i] = '\0';
-	return (name);
-}
-
-static char	*get_var_value(char *str)
-{
-	char	*equals;
-
-	equals = ft_strchr(str, '=');
-	if (!equals)
-		return (NULL);
-	return (equals + 1);
-}
-
-static int	export_var(char *arg)
-{
-	char	*name;
-	char	*value;
-
-	if (!is_valid_var_name(arg))
-	{
-		ft_putstr_fd("export: `", 2);
-		ft_putstr_fd(arg, 2);
-		ft_putstr_fd("': not a valid identifier\n", 2);
-		return (1);
-	}
-	name = get_var_name(arg);
-	value = get_var_value(arg);
-	if (value)
-		setenv(name, value, 1);
-	free(name);
-	return (0);
-}
-
-int	builtin_export(char **argv, char **envp)
-{
-	int	i;
-	int	ret;
 
 	if (!argv[1])
 	{
-		print_export_env(envp);
+		print_export(shell->my_envp);
 		return (0);
 	}
 	i = 1;
-	ret = 0;
 	while (argv[i])
 	{
-		if (export_var(argv[i]))
-			ret = 1;
+		if (ft_strchr(argv[i], '='))
+			shell->my_envp = set_env_var(shell->my_envp, argv[i]);
 		i++;
 	}
-	return (ret);
+	return (0);
 }

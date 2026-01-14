@@ -3,31 +3,29 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_echo.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
+/*   By: atbicer <atbicer@student.s19.be>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/13 by aschweit              #+#    #+#                */
-/*   Updated: 2026/01/13 by aschweit                 ###   ########.fr       */
+/*   Created: 2026/01/14 20:00:00 by atbicer           #+#    #+#             */
+/*   Updated: 2026/01/14 20:00:00 by atbicer          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static int	is_n_flag(char *str)
+static int	is_n_option(char *str)
 {
 	int	i;
 
-	if (!str || str[0] != '-')
+	if (!str || str[0] != '-' || str[1] != 'n')
 		return (0);
-	i = 1;
-	if (str[i] != 'n')
-		return (0);
+	i = 2;
 	while (str[i])
 	{
 		if (str[i] != 'n')
 			return (0);
 		i++;
 	}
-	return (i > 1);
+	return (1);
 }
 
 int	builtin_echo(char **argv)
@@ -37,7 +35,7 @@ int	builtin_echo(char **argv)
 
 	newline = 1;
 	i = 1;
-	while (argv[i] && is_n_flag(argv[i]))
+	while (argv[i] && is_n_option(argv[i]))
 	{
 		newline = 0;
 		i++;
@@ -46,10 +44,10 @@ int	builtin_echo(char **argv)
 	{
 		ft_putstr_fd(argv[i], 1);
 		if (argv[i + 1])
-			write(1, " ", 1);
+			ft_putchar_fd(' ', 1);
 		i++;
 	}
 	if (newline)
-		write(1, "\n", 1);
+		ft_putchar_fd('\n', 1);
 	return (0);
 }

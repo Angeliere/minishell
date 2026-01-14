@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/08 12:31:13 by aschweit       #+#    #+#                */
-/*   Updated: 2026/01/14 by aschweit                 ###   ########.fr       */
+/*   Created: 2025/10/08 12:31:13 by aschweit          #+#    #+#             */
+/*   Updated: 2026/01/14 19:00:00 by aschweit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,22 +24,7 @@ static void	free_partial_argv(char **argv, int count)
 	free(argv);
 }
 
-static int	handle_token(t_token **current, t_cmd *cmd, char **argv, int *i)
-{
-	if (is_redir((*current)->type))
-	{
-		if (!process_redir(current, cmd))
-			return (0);
-	}
-	else
-	{
-		add_word(*current, argv, i);
-		*current = (*current)->next;
-	}
-	return (1);
-}
-
-char	**build_argv(t_token **tokens, t_cmd *cmd)
+char	**build_argv(t_token **tokens, t_cmd *cmd, t_shell *shell)
 {
 	char	**argv;
 	int		count;
@@ -54,8 +39,16 @@ char	**build_argv(t_token **tokens, t_cmd *cmd)
 	current = *tokens;
 	while (current && current->type != type_Pipe)
 	{
-		if (!handle_token(&current, cmd, argv, &i))
-			return (free_partial_argv(argv, i), NULL);
+		if (is_redir(current->type))
+		{
+			if (!process_redir(&current, cmd))
+				return (free_partial_argv(argv, i), NULL);
+		}
+		else
+		{
+			add_word(current, argv, &i, shell);
+			current = current->next;
+		}
 	}
 	argv[i] = NULL;
 	*tokens = current;
@@ -75,7 +68,7 @@ t_cmd	*new_cmd(void)
 	return (cmd);
 }
 
-t_cmd	*parse(t_token *tokens)
+t_cmd	*parse(t_token *tokens, t_shell *shell)
 {
 	t_cmd	*head;
 	t_token	*tok;
@@ -90,7 +83,7 @@ t_cmd	*parse(t_token *tokens)
 		cmd = new_cmd();
 		if (!cmd)
 			return (free_commands(head), NULL);
-		cmd->argv = build_argv(&tok, cmd);
+		cmd->argv = build_argv(&tok, cmd, shell);
 		if (!cmd->argv)
 			return (free(cmd), free_commands(head), NULL);
 		add_cmd(&head, cmd);

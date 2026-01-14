@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   lexer.c                                    :+:      :+:    :+:   */
+/*   lexer.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
+/*   By: atbicer <atbicer@student.s19.be>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/08 12:31:13 by aschweit       #+#    #+#                */
-/*   Updated: 2026/01/13 by aschweit                 ###   ########.fr       */
+/*   Created: 2025/10/08 12:31:13 by aschweit          #+#    #+#             */
+/*   Updated: 2026/01/14 22:00:00 by atbicer          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,13 +32,20 @@ void	update_quote_state(char c, t_quote *state, t_token *token)
 	if (c == '\'' && !state->in_double)
 	{
 		state->in_single = !state->in_single;
-		token->in_single_quotes = 1;
+		if (token)
+			token->in_single_quotes = 1;
 	}
 	else if (c == '"' && !state->in_single)
 	{
 		state->in_double = !state->in_double;
-		token->in_double_quotes = 1;
+		if (token)
+			token->in_double_quotes = 1;
 	}
+}
+
+static int	is_valid_var_char(char c)
+{
+	return (c == '?' || c == '$' || is_var_char(c));
 }
 
 t_token	*extract_word_with_quotes(char *str, int *i)
@@ -47,7 +54,8 @@ t_token	*extract_word_with_quotes(char *str, int *i)
 	t_quote	state;
 	t_token	*token;
 
-	if (str[*i] == '$')
+	if (str[*i] == '$' && str[*i + 1] != '\0'
+		&& is_valid_var_char(str[*i + 1]))
 		return (handle_var(str, i));
 	state.in_single = 0;
 	state.in_double = 0;

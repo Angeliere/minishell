@@ -8,23 +8,30 @@ OBJ_DIR     := obj
 LIBFT_DIR   := libft
 LIBFT       := $(LIBFT_DIR)/libft.a
 
-SRCS        := minishell.c \
-               lexer.c \
-               lexer_utility.c \
-			   lexer_var.c \
-			   lexer_add.c \
-			   lexer_word.c \
-               parser.c \
-			   parser_utils.c \
-			   parser_quotes.c \
-			   parser_syntax_check.c \
-			   parser_add.c \
-			   parser_redirs.c \
-			   builtins_env.c \
-			   builtins_exit.c \
-			   builtins_export.c \
-			   builtins_unset.c \
-			   exec.c
+SRCS        :=	minishell.c \
+            	lexer.c \
+            	lexer_utility.c \
+				lexer_var.c \
+				lexer_add.c \
+				lexer_word.c \
+            	parser.c \
+				parser_utils.c \
+				parser_quotes.c \
+				parser_syntax_check.c \
+				parser_add.c \
+				parser_redir.c \
+				expand_var.c \
+				expand_var_utils.c \
+				env_utils.c \
+				env_manage.c \
+				builtins_echo.c \
+				builtins_pwd.c \
+				builtins_cd.c \
+				builtins_env.c \
+				builtins_exit.c \
+				builtins_export.c \
+				builtins_unset.c \
+				exec.c
 
 OBJS        := $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 

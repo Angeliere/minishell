@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   lexer_var.c                                :+:      :+:    :+:   */
+/*   lexer_var.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
+/*   By: atbicer <atbicer@student.s19.be>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/08 12:31:13 by aschweit       #+#    #+#                */
-/*   Updated: 2026/01/13 by aschweit                 ###   ########.fr       */
+/*   Created: 2026/01/14 01:17:23 by atbicer           #+#    #+#             */
+/*   Updated: 2026/01/14 01:17:23 by atbicer          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ char	*create_special_var(char c)
 	return (var_name);
 }
 
-char	*extract_var_name(char *str, int *i)
+static char	*extract_name(char *str, int *i)
 {
 	int	start;
 
@@ -106,7 +106,7 @@ t_token	*handle_var(char *str, int *i)
 	if (!token)
 		return (NULL);
 	token->type = type_Var;
-	token->value = extract_var_name(str, i);
+	token->value = extract_name(str, i);
 	if (!token->value)
 	{
 		free(token);

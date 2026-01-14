@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parser_syntax_check.c                                :+:      :+:    :+:   */
+/*   parser_syntax_check.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/08 12:31:13 by aschweit       #+#    #+#                */
-/*   Updated: 2026/01/13 by aschweit                 ###   ########.fr        */
+/*   Created: 2026/01/14 01:22:58 by aschweit          #+#    #+#             */
+/*   Updated: 2026/01/14 20:30:00 by aschweit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,11 @@
 
 int	check_pipe_syntax(t_token *current)
 {
+	if (current->type == type_Pipe && !current->next)
+	{
+		ft_putstr_fd("minishell: syntax error near token `|'\n", 2);
+		return (0);
+	}
 	if (current->type == type_Pipe && current->next
 		&& current->next->type == type_Pipe)
 	{
