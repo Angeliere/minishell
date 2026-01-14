@@ -27,6 +27,37 @@ static char	*ft_strjoin3(const char *a, const char *b, const char *c)
 	return (s2);
 }
 
+static void	apply_redir(t_redir *r)
+{
+	int	fd;
+
+	if (r->type == type_Redir_in)
+		fd = open(r->file, O_RDONLY);
+	else if (r->type == type_Redir_out)
+		fd = open(r->file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	else
+		fd = open(r->file, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	if (fd == -1)
+	{
+		perror(r->file);
+		exit(1);
+	}
+	if (r->type == type_Redir_in)
+		dup2(fd, STDIN_FILENO);
+	else
+		dup2(fd, STDOUT_FILENO);
+	close(fd);
+}
+
+static void	apply_redirs(t_redir *redirs)
+{
+	while (redirs)
+	{
+		apply_redir(redirs);
+		redirs = redirs->next;
+	}
+}
+
 static void	free_split(char **arr)
 {
 	int i = 0;
@@ -157,6 +188,7 @@ static void	exec_child(t_cmd *cmd, t_shell *sh)
 {
 	char	*path;
 
+	apply_redirs(cmd->redirs);
 	if (is_builtin(cmd->argv[0]))
 		exit(exec_builtin(cmd->argv, sh));
 	path = resolve_path(cmd->argv[0], sh->envp);

@@ -45,6 +45,7 @@ static int	handle_input(char *line_input, t_shell *shell)
 {
 	if (!line_input)
 	{
+		free(line_input);
 		printf("exit\n");
 		return (1);
 	}
@@ -61,6 +62,47 @@ static int	handle_input(char *line_input, t_shell *shell)
 	process_line(line_input, shell);
 	free(line_input);
 	return (0);
+}
+
+int	has_unclosed_quotes(char *s)
+{
+	int	in_single;
+	int	in_double;
+
+	in_single = 0;
+	in_double = 0;
+	while (*s)
+	{
+		if (*s == '\'' && !in_double)
+			in_single = !in_single;
+		else if (*s == '"' && !in_single)
+			in_double = !in_double;
+		s++;
+	}
+	return (in_single || in_double);
+}
+
+char	*read_until_closed_quotes(char *line)
+{
+	char	*tmp;
+	char	*next;
+
+	if (!line)
+		return (NULL);
+	while (has_unclosed_quotes(line))
+	{
+		next = readline("> ");
+		if (!next)
+			return (line);
+		tmp = line;
+		line = ft_strjoin(tmp, "\n");
+		free(tmp);
+		tmp = line;
+		line = ft_strjoin(tmp, next);
+		free(tmp);
+		free(next);
+	}
+	return (line);
 }
 
 int	main(int argc, char **argv, char **envp)
@@ -80,6 +122,12 @@ int	main(int argc, char **argv, char **envp)
 	while (!end)
 	{
 		line_input = readline("minishell> ");
+		if (!line_input)
+		{
+		write(1, "exit\n", 5);
+		break ;
+		}
+		line_input = read_until_closed_quotes(line_input);
 		end = handle_input(line_input, shell);
 	}
 	free_envp(shell->my_envp);
