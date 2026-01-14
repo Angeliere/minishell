@@ -6,17 +6,13 @@
 /*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 12:31:13 by aschweit          #+#    #+#             */
-/*   Updated: 2026/01/14 20:30:00 by aschweit         ###   ########.fr       */
+/*   Updated: 2026/01/14 20:50:59 by aschweit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#include <signal.h>
+
+struct termios	g_original_term;
 
 void	handle_sigint(int sig)
 {
@@ -25,6 +21,20 @@ void	handle_sigint(int sig)
 	rl_on_new_line();
 	rl_replace_line("", 0);
 	rl_redisplay();
+}
+
+void	setup_terminal(void)
+{
+    struct termios term;
+    tcgetattr(STDIN_FILENO, &g_original_term);
+	term = g_original_term; 
+	term.c_lflag &= ~ECHOCTL;
+	tcsetattr(STDIN_FILENO, TCSANOW, &term);
+}
+
+void	restore_terminal(void)
+{
+    tcsetattr(STDIN_FILENO, TCSANOW, &g_original_term);
 }
 
 static void	process_line(char *line_input, t_shell *shell)
@@ -59,6 +69,7 @@ static int	handle_input(char *line_input, t_shell *shell)
 		free(line_input);
 		return (1);
 	}
+	
 	process_line(line_input, shell);
 	free(line_input);
 	return (0);
@@ -117,6 +128,7 @@ int	main(int argc, char **argv, char **envp)
 	if (!shell)
 		return (1);
 	end = 0;
+	setup_terminal();
 	signal(SIGINT, handle_sigint);
 	signal(SIGQUIT, SIG_IGN);
 	while (!end)
@@ -132,6 +144,7 @@ int	main(int argc, char **argv, char **envp)
 	}
 	free_envp(shell->my_envp);
 	free(shell);
+	restore_terminal();
 	rl_clear_history();
 	return (0);
 }

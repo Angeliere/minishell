@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: atbicer <atbicer@student.s19.be>           +#+  +:+       +#+        */
+/*   By: aschweit <aschweit@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 12:31:13 by aschweit          #+#    #+#             */
-/*   Updated: 2026/01/14 20:30:00 by atbicer          ###   ########.fr       */
+/*   Updated: 2026/01/14 20:35:33 by aschweit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 # include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <signal.h>
 
 /* token types
 	Pipe = "|"
@@ -78,7 +81,11 @@ typedef struct s_shell
 	int					last_exit_status;
 }						t_shell;
 
-extern struct termios	g_original_term;
+typedef struct s_global
+{
+	struct termios			original_term;
+	volatile sig_atomic_t	sigint_received;
+}	t_global;
 
 t_token					*tokenize_with_quotes(char *input);
 t_token					*extract_word_with_quotes(char *str, int *i);
@@ -109,10 +116,12 @@ int						execute_cmds(t_cmd *cmds, t_shell *shell);
 int						builtin_pwd(char **argv);
 int						builtin_echo(char **argv);
 int						builtin_cd(char **argv);
-int						builtin_env(char **argv, char **envp);
+int						builtin_env(char **argv, t_shell *shell);
 int						builtin_exit(char **argv);
 int						builtin_export(char **argv, t_shell *shell);
 int						builtin_unset(char **argv, t_shell *shell);
+int						is_builtin(char *cmd);
+int						exec_builtin(char **argv, t_shell *shell);
 
 /* norme merge new prototypes */
 int						check_pipe_syntax(t_token *current);
